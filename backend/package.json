@@ -1,0 +1,29 @@
+{
+  "name": "personal-travel-story",
+  "version": "1.0.0",
+  "description": "MERN Project for Personal Travel Story.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "MERN",
+    "Travel",
+    "Story",
+    "Project",
+    "Travel",
+    "Blog"
+  ],
+  "author": "Mehdiali Kadiwala (CoAxn)",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.14.2",
+    "nodemon": "^3.1.10"
+  }
+}
