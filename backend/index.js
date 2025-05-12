@@ -10,6 +10,8 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 
+const { authenticateToken } = require("./utilities.js");
+
 const User = require("./models/user.model.js");
 
 // mongoose.connect(config.connectionString);
@@ -78,6 +80,79 @@ app.post("/create-account", async (request, response) => {
     message: "Registration Successful",
   });
 });
+
+// Login Account
+app.post("/login", async (request, response) => {
+  if (!request.body) {
+    return response
+      .status(400)
+      .json({ error: true, message: "Fill all the data." });
+  }
+
+  const { email, password } = request.body;
+
+  if (!email || !password) {
+    return response
+      .status(400)
+      .json({ error: true, message: "Email and Password are required." });
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return response
+      .status(400)
+      .json({ error: true, message: "User not found!" });
+  }
+
+  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordCorrect) {
+    return response
+      .status(400)
+      .json({ error: true, message: "Invalid Login Credentials" });
+  }
+
+  const accessToken = jwt.sign(
+    { userId: user._id },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: "72h",
+    }
+  );
+
+  return response.status(201).json({
+    error: false,
+    message: "Login Successful",
+    user: {
+      fullName: user.fullName,
+      email: user.email,
+    },
+    accessToken,
+  });
+});
+
+// Get User
+app.get("/get-user", authenticateToken, async (request, response) => {
+  const { userId } = request.user;
+
+  const isUser = await User.findOne({ _id: userId });
+
+  if (!isUser) {
+    return response
+      .status(401)
+      .json({ error: true, message: "User not found." });
+  }
+
+  return response.status(201).json({ error: false, user: isUser, message: "" });
+});
+
+// Add story
+app.post(
+  "/add-travel-story",
+  authenticateToken,
+  async (request, response) => {}
+);
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port number = ", process.env.PORT);
