@@ -9,6 +9,9 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
+const upload = require("./multer.js");
+const fs = require("fs");
+const path = require("path");
 
 const { authenticateToken } = require("./utilities.js");
 
@@ -147,6 +150,57 @@ app.get("/get-user", authenticateToken, async (request, response) => {
 
   return response.status(201).json({ error: false, user: isUser, message: "" });
 });
+
+// Upload Story Image Route.
+app.post("/image-upload", upload.single("image"), async (request, response) => {
+  try {
+    if (!request.file) {
+      return response
+        .status(400)
+        .json({ error: true, message: "No image uploaded." });
+    }
+
+    const imageUrl = `http://localhost:${process.env.PORT}/uploads/${request.file.filename}`;
+
+    response.status(201).json({ error: false, imageUrl });
+  } catch (error) {
+    response.status(500).json({ error: true, message: error.message });
+  }
+});
+
+// Delete an Image from uploads folder.
+app.delete("/delete-image", async (request, response) => {
+  const { imageUrl } = request.query;
+
+  if (!imageUrl) {
+    return response
+      .status(400)
+      .json({ error: true, message: "imageUrl parameter is required." });
+  }
+
+  try {
+    const filename = path.basename(imageUrl);
+
+    const filePath = path.join(__dirname, "uploads", filename);
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      return response
+        .status(200)
+        .json({ error: false, message: "image deleted successfully." });
+    } else {
+      return response
+        .status(200)
+        .json({ error: false, message: "Image not Found." });
+    }
+  } catch (error) {
+    return response.status(500).json({ error: true, message: error.message });
+  }
+});
+
+// Static files from the uploads and asserts directory.
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/assets", express.static(path.join(__dirname, "uploads")));
 
 // Add story
 app.post("/add-travel-story", authenticateToken, async (request, response) => {
