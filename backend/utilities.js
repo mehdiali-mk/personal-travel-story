@@ -13,7 +13,7 @@ function authenticateToken(request, response, next) {
     if (error)
       return response
         .status(401)
-        .json({ error: true, message: "Cannot verify password." });
+        .json({ error: true, message: "Unauthorized Access." });
     request.user = user;
     next();
   });

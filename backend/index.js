@@ -13,6 +13,7 @@ const jwt = require("jsonwebtoken");
 const { authenticateToken } = require("./utilities.js");
 
 const User = require("./models/user.model.js");
+const TravelStory = require("./models/travelStory.model.js");
 
 // mongoose.connect(config.connectionString);
 
@@ -148,11 +149,46 @@ app.get("/get-user", authenticateToken, async (request, response) => {
 });
 
 // Add story
-app.post(
-  "/add-travel-story",
-  authenticateToken,
-  async (request, response) => {}
-);
+app.post("/add-travel-story", authenticateToken, async (request, response) => {
+  if (!request.body) {
+    return response
+      .status(400)
+      .json({ error: true, message: "Fill all the data." });
+  }
+
+  const { title, story, visitedLocation, imageUrl, visitedDate } = request.body;
+  const { userId } = request.user;
+
+  if (!title || !story || !visitedLocation || !imageUrl || !visitedDate) {
+    return response
+      .status(400)
+      .json({ error: true, message: "All fields are required." });
+  }
+
+  // Visited Date is converted from milliseconds to Date Object.
+  const parsedVisitedDate = new Date(parseInt(visitedDate));
+
+  try {
+    const travelStory = new TravelStory({
+      title,
+      story,
+      visitedLocation,
+      userId,
+      imageUrl,
+      visitedDate: parsedVisitedDate,
+    });
+
+    await travelStory.save();
+
+    response.status(201).json({
+      error: false,
+      story: travelStory,
+      message: "Story added successfully",
+    });
+  } catch (error) {
+    response.status(400).json({ error: true, message: error.message });
+  }
+});
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port number = ", process.env.PORT);
