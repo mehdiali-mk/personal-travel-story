@@ -258,6 +258,51 @@ app.get("/get-all-stories", authenticateToken, async (request, response) => {
   }
 });
 
+// Edit Travel Story.
+app.post("/edit-story/:id", authenticateToken, async (request, response) => {
+  const { id } = request.params;
+  const { title, story, visitedLocation, imageUrl, visitedDate } = request.body;
+  const { userId } = request.user;
+
+  if (!title || !story || !visitedLocation || !imageUrl || !visitedDate) {
+    return response
+      .status(400)
+      .json({ error: true, message: "All fields are required." });
+  }
+
+  // Visited Date is converted from milliseconds to Date Object.
+  const parsedVisitedDate = new Date(parseInt(visitedDate));
+
+  try {
+    const travelStory = await TravelStory.findOne({ _id: id, userId: userId });
+
+    if (!travelStory) {
+      return response
+        .status(404)
+        .json({ error: true, message: "Travel Story not found." });
+    }
+
+    const placeholderImageUrl = `http://localhost:${process.env.PORT}/assets/placeholder.jpeg`;
+
+    travelStory.title = title;
+    travelStory.story = story;
+    travelStory.visitedLocation = visitedLocation;
+    travelStory.imageUrl = imageUrl || placeholderImageUrl;
+    travelStory.visitedDate = parsedVisitedDate;
+
+    await travelStory.save();
+    response
+      .status(200)
+      .json({
+        error: false,
+        story: travelStory,
+        message: "Updated Successfully",
+      });
+  } catch (error) {
+    return response.status(500).json({ error: true, message: error.message });
+  }
+});
+
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port number = ", process.env.PORT);
   console.log(`Link: http://localhost:${process.env.PORT}`);
