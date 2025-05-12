@@ -190,6 +190,20 @@ app.post("/add-travel-story", authenticateToken, async (request, response) => {
   }
 });
 
+// Get all stories.
+app.get("/get-all-stories", authenticateToken, async (request, response) => {
+  const { userId } = request.user;
+
+  try {
+    const travelStories = await TravelStory.find({ userId: userId }).sort({
+      isFavourite: -1,
+    });
+    response.status(200).json({ error: false, stories: travelStories });
+  } catch (error) {
+    response.status(500).json({ error: true, message: error.message });
+  }
+});
+
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port number = ", process.env.PORT);
   console.log(`Link: http://localhost:${process.env.PORT}`);
