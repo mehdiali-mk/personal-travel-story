@@ -259,7 +259,7 @@ app.get("/get-all-stories", authenticateToken, async (request, response) => {
 });
 
 // Edit Travel Story.
-app.post("/edit-story/:id", authenticateToken, async (request, response) => {
+app.put("/edit-story/:id", authenticateToken, async (request, response) => {
   const { id } = request.params;
   const { title, story, visitedLocation, imageUrl, visitedDate } = request.body;
   const { userId } = request.user;
@@ -291,17 +291,92 @@ app.post("/edit-story/:id", authenticateToken, async (request, response) => {
     travelStory.visitedDate = parsedVisitedDate;
 
     await travelStory.save();
-    response
-      .status(200)
-      .json({
-        error: false,
-        story: travelStory,
-        message: "Updated Successfully",
-      });
+    response.status(200).json({
+      error: false,
+      story: travelStory,
+      message: "Updated Successfully",
+    });
   } catch (error) {
     return response.status(500).json({ error: true, message: error.message });
   }
 });
+
+// Delete Travel Stroy.
+app.delete(
+  "/delete-story/:id",
+  authenticateToken,
+  async (request, response) => {
+    const { id } = request.params;
+    const { userId } = request.user;
+
+    try {
+      const travelStroy = await TravelStory.findOne({
+        _id: id,
+        userId: userId,
+      });
+
+      // if (!travelStory) {
+      //   return response
+      //     .status(404)
+      //     .json({ error: true, message: "Travel Story not found." });
+      // }
+
+      console.log(travelStroy);
+      await TravelStory.deleteOne({ _id: id, userId: userId });
+
+      console.log(travelStroy.imageUrl);
+
+      const imageUrl = travelStroy.imageUrl;
+      const filename = path.basename(imageUrl);
+
+      const filePath = path.join(__dirname, "uploads", filename);
+
+      fs.unlink(filePath, (error) => {
+        if (error) {
+          console.log("Failed to delete image file: ", error);
+        }
+      });
+
+      return response
+        .status(200)
+        .json({ error: false, message: "Travel Story deleted successfully!!" });
+    } catch (error) {
+      return response
+        .status(401)
+        .json({ error: true, message: "Error While deleting story." });
+    }
+  }
+);
+
+// Update isfavourite.
+app.put(
+  "/update-is-favourite/:id",
+  authenticateToken,
+  async (request, response) => {
+    const { id } = request.params;
+    const { isfavourite } = request.body;
+    const { userId } = request.user;
+
+    try {
+      const travelStory = await TravelStory.findOne({
+        _id: id,
+        userId: userId,
+      });
+
+      if (!travelStory) {
+        return response
+          .status(401)
+          .json({ error: true, message: "Travel Story not found." });
+      }
+
+      travelStory.isFavourite = isFavourite;
+    } catch (error) {
+      return response
+        .status(401)
+        .json({ error: true, message: "Error while updating favourite." });
+    }
+  }
+);
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port number = ", process.env.PORT);
