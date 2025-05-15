@@ -341,9 +341,7 @@ app.delete(
         .status(200)
         .json({ error: false, message: "Travel Story deleted successfully!!" });
     } catch (error) {
-      return response
-        .status(401)
-        .json({ error: true, message: "Error While deleting story." });
+      return response.status(500).json({ error: true, message: error.message });
     }
   }
 );
@@ -354,7 +352,7 @@ app.put(
   authenticateToken,
   async (request, response) => {
     const { id } = request.params;
-    const { isfavourite } = request.body;
+    const { isFavourite } = request.body;
     const { userId } = request.user;
 
     try {
@@ -364,19 +362,52 @@ app.put(
       });
 
       if (!travelStory) {
-        return response
+        response
           .status(401)
           .json({ error: true, message: "Travel Story not found." });
       }
 
       travelStory.isFavourite = isFavourite;
+
+      await travelStory.save();
+
+      return response.status(200).json({
+        error: false,
+        story: travelStory,
+        message: "Update successful.",
+      });
     } catch (error) {
-      return response
-        .status(401)
-        .json({ error: true, message: "Error while updating favourite." });
+      return response.status(500).json({ error: true, message: error.message });
     }
   }
 );
+
+// Search Travel Story.
+app.get("/search", authenticateToken, async (request, response) => {
+  const { query } = request.query;
+  const { userId } = request.user;
+
+  if (!query) {
+    return response
+      .status(404)
+      .json({ error: true, message: "Query required." });
+  }
+
+  try {
+    const searchResults = await TravelStory.find({
+      userId: userId,
+      $or: [
+        { title: { $regex: query, $options: "i" } },
+        { story: { $regex: query, $options: "i" } },
+        { visitedLocation: { $regex: query, $options: "i" } },
+      ],
+    }).sort({ isFavourite: -1 });
+
+    return response.status(200).json({ error: false, stories: searchResults });
+  } catch (error) {
+    return response.status(500).json({ error: true, message: error.message });
+  }
+});
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port number = ", process.env.PORT);
