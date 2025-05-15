@@ -409,6 +409,32 @@ app.get("/search", authenticateToken, async (request, response) => {
   }
 });
 
+// Filter Travel Stories by Date Range.
+app.get(
+  "/travel-stories/filter",
+  authenticateToken,
+  async (request, response) => {
+    const { startDate, endDate } = request.query;
+    const { userId } = request.user;
+
+    try {
+      const start = new Date(parseInt(startDate));
+      const end = new Date(parseInt(endDate));
+
+      const filteredStories = await TravelStory.find({
+        userId: userId,
+        visitedDate: { $gte: start, $lte: end },
+      }).sort({ isFavourite: -1 });
+
+      return response
+        .status(200)
+        .json({ error: false, stories: filteredStories });
+    } catch (error) {
+      return response.status(500).json({ error: true, message: error.message });
+    }
+  }
+);
+
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port number = ", process.env.PORT);
   console.log(`Link: http://localhost:${process.env.PORT}`);
