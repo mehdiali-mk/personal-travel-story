@@ -15,6 +15,7 @@ export default function App() {
     <div>
       <Router>
         <Routes>
+          <Route path="/" exact element={<Root />} />
           <Route path="/dashboard" exact element={<Home />} />
           <Route path="/login" exact element={<Login />} />
           <Route path="/signup" exact element={<SignUp />} />
@@ -22,5 +23,15 @@ export default function App() {
         </Routes>
       </Router>
     </div>
+  );
+}
+
+function Root() {
+  const isAuthenticated = !!localStorage.getItem("token");
+
+  return isAuthenticated ? (
+    <Navigate to="/dashboard" />
+  ) : (
+    <Navigate to="/login" />
   );
 }
