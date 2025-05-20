@@ -2,13 +2,25 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
+import { MdAdd } from "react-icons/md";
+import Modal from "react-modal";
 import TravelStoryCard from "../../components/Cards/TravelStoryCard";
+import AddEditTravelStory from "./AddEditTravelStory.jsx";
+
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Home() {
   const navigate = useNavigate();
 
   const [userInfo, setUserInfo] = useState(null);
   const [allStories, setAllStories] = useState([]);
+
+  const [openAddEditModal, setOpenAddEditModal] = useState({
+    isShown: false,
+    type: "add",
+    data: null,
+  });
 
   // GET User Information.
   async function getUserInfo() {
@@ -48,7 +60,28 @@ export default function Home() {
   function handleViewStory(data) {}
 
   // Handle Update Favourite.
-  function updateIsFavourite(data) {}
+  async function updateIsFavourite(storyData) {
+    const storyId = storyData._id;
+
+    try {
+      const response = await axiosInstance.put(
+        "/update-is-favourite/" + storyId,
+        {
+          isFavourite: !storyData.isFavourite,
+        }
+      );
+
+      if (response.data && response.data.story) {
+        toast.success("Story Updated Successfully");
+        getAllTravelStories();
+      }
+    } catch (error) {
+      console.log(
+        "Error occurred while fetching updating isFavourite.\n",
+        error.message
+      );
+    }
+  }
 
   useEffect(() => {
     getAllTravelStories();
@@ -56,7 +89,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div>
+    <>
       <Navbar userInfo={userInfo} />
 
       <div className="container mx-auto py-10">
@@ -89,6 +122,40 @@ export default function Home() {
           <div className="w-[320px]"></div>
         </div>
       </div>
-    </div>
+
+      {/* Add & Edit Travel Story Modal */}
+      <Modal
+        isOpen={openAddEditModal.isShown}
+        onRequestClose={() => {}}
+        style={{
+          overlay: {
+            backgroundColor: "rgba(0,0,0,0.2)",
+            zIndex: 999,
+          },
+        }}
+        appElement={document.getElementById("root")}
+        className={"model-box scrollbar"}
+      >
+        <AddEditTravelStory
+          type={openAddEditModal.type}
+          storyInfo={openAddEditModal.data}
+          onClose={() => {
+            setOpenAddEditModal({ isShown: false, type: "data", data: null });
+          }}
+          getAllTravelStories={getAllTravelStories}
+        />
+      </Modal>
+
+      <button
+        className="w-16 h-16 flex items-center justify-center rounded-full bg-primary hover:bg-cyan-400 fixed right-10 bottom-10 cursor-pointer"
+        onClick={() => {
+          setOpenAddEditModal({ isShown: true, type: "add", data: null });
+        }}
+      >
+        <MdAdd className="text-[32px] text-white" />
+      </button>
+
+      <ToastContainer />
+    </>
   );
 }
