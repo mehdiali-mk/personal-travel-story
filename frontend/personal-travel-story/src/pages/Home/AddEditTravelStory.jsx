@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import { MdAdd, MdDeleteOutline, MdUpdate, MdClose } from "react-icons/md";
-import DateSelector from "../../components/Input/DateSelector";
-import ImageSelector from "../../components/Input/ImageSelector";
+import DateSelector from "../../components/Input/DateSelector.jsx";
+import ImageSelector from "../../components/Input/ImageSelector.jsx";
+import TagInput from "../../components/Input/TagInput.jsx";
+import { FaUpload } from "react-icons/fa";
+import axiosInstance from "../../utils/axiosInstance.js";
+import moment from "moment";
+import uploadImage from "../../utils/uploadImage.js";
+import { ToastContainer, toast } from "react-toastify";
 
 export default function AddEditTravelStory({
   storyInfo,
@@ -15,7 +21,65 @@ export default function AddEditTravelStory({
   const [visitedLocation, setVisitedLocation] = useState([]);
   const [visitedDate, setVisitedDate] = useState(null);
 
-  function handleAddOrUpdateClick() {}
+  const [error, setError] = useState("");
+
+  async function addNewTravelStory() {
+    try {
+      let imageUrl = "";
+
+      if (storyImg) {
+        const imgUploadResponse = await uploadImage(storyImg);
+
+        imageUrl = imgUploadResponse.imageUrl || "";
+      }
+
+      const response = await axiosInstance.post("/add-travel-story", {
+        title,
+        story,
+        imageUrl: imageUrl || "",
+        visitedLocation,
+        visitedDate: visitedDate
+          ? moment(visitedDate).valueOf()
+          : moment().valueOf(),
+      });
+
+      if (response.data && response.data.story) {
+        toast.success("Story added Successfully");
+        getAllTravelStories();
+        onClose();
+      }
+    } catch (error) {}
+  }
+
+  async function updateTravelStory() {}
+
+  function handleAddOrUpdateClick() {
+    console.log("Input Data: ", {
+      title,
+      storyImg,
+      story,
+      visitedLocation,
+      visitedDate,
+    });
+
+    if (!title) {
+      setError("Please enter title of story.");
+      return;
+    }
+
+    if (!story) {
+      setError("Please enter the story.");
+      return;
+    }
+
+    setError("");
+
+    if (type === "edit") {
+      updateTravelStory();
+    } else {
+      addNewTravelStory();
+    }
+  }
   function handleDeleteImage() {}
 
   return (
@@ -47,6 +111,10 @@ export default function AddEditTravelStory({
               <MdClose className="text-lg text-slate-400" />
             </button>
           </div>
+
+          {error && (
+            <p className="text-red-500 text-xs pt-2 text-right">{error} </p>
+          )}
         </div>
       </div>
 
@@ -93,6 +161,11 @@ export default function AddEditTravelStory({
                 setStory(target.value);
               }}
             ></textarea>
+          </div>
+
+          <div className="pt-3">
+            <label htmlFor="visitedLocation">VISITED LOCATION</label>
+            <TagInput tags={visitedLocation} setTags={setVisitedLocation} />
           </div>
         </div>
       </div>
