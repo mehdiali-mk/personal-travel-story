@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { MdAdd, MdDeleteOutline, MdUpdate, MdClose } from "react-icons/md";
 import DateSelector from "../../components/Input/DateSelector";
+import ImageSelector from "../../components/Input/ImageSelector";
 
 export default function AddEditTravelStory({
   storyInfo,
@@ -15,6 +16,7 @@ export default function AddEditTravelStory({
   const [visitedDate, setVisitedDate] = useState(null);
 
   function handleAddOrUpdateClick() {}
+  function handleDeleteImage() {}
 
   return (
     <div>
@@ -66,6 +68,31 @@ export default function AddEditTravelStory({
           />
           <div className="my-3">
             <DateSelector date={visitedDate} setDate={setVisitedDate} />
+          </div>
+
+          <ImageSelector
+            image={storyImg}
+            setImage={setStoryImg}
+            handleDeleteImage={handleDeleteImage}
+          />
+
+          <div className="flex flex-col gap-2 mt-4">
+            <label htmlFor="story" className="input-label">
+              STORY
+            </label>
+
+            <textarea
+              name="story"
+              id="story"
+              type="text"
+              className="text-sm text-slate-950 outline-none bg-slate-50 p-2 rounded"
+              placeholder="Your Story...."
+              rows={10}
+              value={story}
+              onChange={({ target }) => {
+                setStory(target.value);
+              }}
+            ></textarea>
           </div>
         </div>
       </div>
