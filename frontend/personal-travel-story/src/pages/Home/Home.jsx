@@ -9,6 +9,7 @@ import AddEditTravelStory from "./AddEditTravelStory.jsx";
 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ViewTravelStory from "./ViewTravelStory.jsx";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -19,6 +20,11 @@ export default function Home() {
   const [openAddEditModal, setOpenAddEditModal] = useState({
     isShown: false,
     type: "add",
+    data: null,
+  });
+
+  const [openViewModal, setOpenViewModal] = useState({
+    isShown: false,
     data: null,
   });
 
@@ -54,10 +60,14 @@ export default function Home() {
   }
 
   // Handle Edit Story Click
-  function handleEdit(data) {}
+  function handleEdit(data) {
+    setOpenAddEditModal({ isShown: true, type: "edit", data: data });
+  }
 
   // Handle Travel Story Click
-  function handleViewStory(data) {}
+  function handleViewStory(data) {
+    setOpenViewModal({ isShown: true, data });
+  }
 
   // Handle Update Favourite.
   async function updateIsFavourite(storyData) {
@@ -146,6 +156,31 @@ export default function Home() {
         />
       </Modal>
 
+      {/* View Travel Story Modal */}
+      <Modal
+        isOpen={openViewModal.isShown}
+        onRequestClose={() => {}}
+        style={{
+          overlay: {
+            backgroundColor: "rgba(0,0,0,0.2)",
+            zIndex: 999,
+          },
+        }}
+        appElement={document.getElementById("root")}
+        className={"model-box scrollbar"}
+      >
+        <ViewTravelStory
+          storyInfo={openViewModal.data || null}
+          onClose={() => {
+            setOpenViewModal((prevState) => ({ ...prevState, isShown: false }));
+          }}
+          onEditClick={() => {
+            setOpenViewModal((prevState) => ({ ...prevState, isShown: false }));
+            handleEdit(openViewModal.data || null);
+          }}
+          onDeleteClick={() => {}}
+        ></ViewTravelStory>
+      </Modal>
       <button
         className="w-16 h-16 flex items-center justify-center rounded-full bg-primary hover:bg-cyan-400 fixed right-10 bottom-10 cursor-pointer"
         onClick={() => {
