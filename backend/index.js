@@ -162,7 +162,7 @@ app.post("/image-upload", upload.single("image"), async (request, response) => {
 
     const imageUrl = `http://localhost:${process.env.PORT}/uploads/${request.file.filename}`;
 
-    response.status(201).json({ error: false, imageUrl });
+    response.status(200).json({ imageUrl });
   } catch (error) {
     response.status(500).json({ error: true, message: error.message });
   }
@@ -264,7 +264,7 @@ app.put("/edit-story/:id", authenticateToken, async (request, response) => {
   const { title, story, visitedLocation, imageUrl, visitedDate } = request.body;
   const { userId } = request.user;
 
-  if (!title || !story || !visitedLocation || !imageUrl || !visitedDate) {
+  if (!title || !story || !visitedLocation || !visitedDate) {
     return response
       .status(400)
       .json({ error: true, message: "All fields are required." });

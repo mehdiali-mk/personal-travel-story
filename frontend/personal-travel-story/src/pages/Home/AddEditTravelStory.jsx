@@ -16,7 +16,7 @@ export default function AddEditTravelStory({
   getAllTravelStories,
 }) {
   const [title, setTitle] = useState(storyInfo?.title || "");
-  const [storyImg, setStoryImg] = useState(storyInfo.imageUrl || null);
+  const [storyImg, setStoryImg] = useState(storyInfo?.imageUrl || "");
   const [story, setStory] = useState(storyInfo?.story || "");
   const [visitedLocation, setVisitedLocation] = useState(
     storyInfo?.visitedLocation || []
@@ -52,10 +52,68 @@ export default function AddEditTravelStory({
         getAllTravelStories();
         onClose();
       }
-    } catch (error) {}
+    } catch (error) {
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        setError(error.response.data.message);
+      } else {
+        setError("Unexpected Error Occurred while adding travel story.\n");
+      }
+    }
   }
 
-  async function updateTravelStory() {}
+  async function updateTravelStory() {
+    const storyId = storyInfo?._id;
+
+    try {
+      let imageUrl = "";
+
+      let postData = {
+        title,
+        story,
+        imageUrl: storyInfo.imageUrl || "",
+        visitedLocation,
+        visitedDate: visitedDate
+          ? moment(visitedDate).valueOf()
+          : moment().valueOf(),
+      };
+
+      if (typeof storyImg === "object") {
+        const imageUploadResponse = await uploadImage(storyImg);
+        imageUrl = imageUploadResponse.imageUrl || "";
+
+        postData = {
+          ...postData,
+          imageUrl: imageUrl,
+        };
+      }
+
+      const response = await axiosInstance.put(
+        "/edit-story/" + storyId,
+        postData
+      );
+
+      if (response.data && response.data.story) {
+        toast.success("Story Updated Successfully");
+        getAllTravelStories();
+        onClose();
+      }
+    } catch (error) {
+      console.log(error);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        setError(error.response.data.message);
+      } else {
+        setError("Unexpected Error Occurred while adding travel story.\n");
+      }
+    }
+  }
 
   function handleAddOrUpdateClick() {
     console.log("Input Data: ", {
@@ -84,8 +142,33 @@ export default function AddEditTravelStory({
       addNewTravelStory();
     }
   }
-  function handleDeleteImage() {}
 
+  async function handleDeleteImage() {
+    const deleteImageResponse = await axiosInstance.delete("/delete-image", {
+      params: {
+        imageUrl: storyInfo.imageUrl,
+      },
+    });
+
+    if (deleteImageResponse.data) {
+      const storyId = storyInfo?._id;
+
+      const postData = {
+        title,
+        story,
+        visitedLocation,
+        visitedDate: moment().valueOf(),
+        imageUrl: "",
+      };
+
+      const updateStoryResponse = await axiosInstance.put(
+        "/edit-story/" + storyId,
+        postData
+      );
+
+      setStoryImg(null);
+    }
+  }
   return (
     <div className="relative">
       <div className="flex items-center justify-between">
