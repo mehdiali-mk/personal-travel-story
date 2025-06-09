@@ -1,14 +1,30 @@
 import React from "react";
 import ProfileInfo from "./Cards/ProfileInfo";
 import { useNavigate } from "react-router-dom";
+import SearchBar from "./Input/SearchBar.jsx";
 
-export default function Navbar({ userInfo }) {
+export default function Navbar({
+  userInfo,
+  searchQuery,
+  setSearchQuery,
+  onSearchNote,
+  handleClearSearch,
+}) {
   const isToken = localStorage.getItem("token");
   const navigate = useNavigate();
 
   function onLogout() {
     localStorage.clear();
     navigate("/login");
+  }
+  function handleSearch() {
+    if (searchQuery) {
+      onSearchNote(searchQuery);
+    }
+  }
+  function onClearSearch() {
+    handleClearSearch();
+    setSearchQuery("");
   }
 
   return (
@@ -17,7 +33,19 @@ export default function Navbar({ userInfo }) {
         Travel Story
       </h2>
 
-      {isToken && <ProfileInfo userInfo={userInfo} onLogout={onLogout} />}
+      {isToken && (
+        <>
+          <SearchBar
+            value={searchQuery}
+            onChange={({ target }) => {
+              setSearchQuery(target.value);
+            }}
+            handleSearch={handleSearch}
+            onClearSearch={onClearSearch}
+          />
+          <ProfileInfo userInfo={userInfo} onLogout={onLogout} />{" "}
+        </>
+      )}
     </div>
   );
 }
