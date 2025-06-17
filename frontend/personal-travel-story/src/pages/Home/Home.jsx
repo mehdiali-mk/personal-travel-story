@@ -14,6 +14,9 @@ import EmptyCard from "../../components/Cards/EmptyCard.jsx";
 
 import EmptyImg from "../../assets/images/add-story.svg";
 import { DayPicker } from "react-day-picker";
+import moment from "moment";
+import FilterInfoTitle from "../../components/Cards/FilterInfoTitle.jsx";
+import { getEmptyCardImg, getEmptyCardMessage } from "../../utils/helper.js";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -92,7 +95,14 @@ export default function Home() {
 
       if (response.data && response.data.story) {
         toast.success("Story Updated Successfully");
-        getAllTravelStories();
+
+        if (filterType === "search" && searchQuery) {
+          onSearchStory(searchQuery);
+        } else if (filterType === "date") {
+          filterStoriesByDate(dateRange);
+        } else {
+          getAllTravelStories();
+        }
       }
     } catch (error) {
       console.log(
@@ -138,12 +148,36 @@ export default function Home() {
   }
 
   // Handle Filter Travel Story By Date Range.
-  async function filterStoriesByDate(day) {}
+  async function filterStoriesByDate(day) {
+    try {
+      const startDate = day.from ? moment(day.from).valueOf() : null;
+      const endDate = day.to ? moment(day.to).valueOf() : null;
+
+      if (startDate && endDate) {
+        const response = await axiosInstance.get("/travel-stories/filter", {
+          params: { startDate, endDate },
+        });
+
+        if (response.data && response.data.stories) {
+          setFilterType("date");
+          setAllStories(response.data.stories);
+        }
+      }
+    } catch (error) {
+      console.log("An Unexpected error occurred. Please try again.");
+    }
+  }
 
   // Handle Date Range Select.
   function handleDayClick(day) {
     setDateRange(day);
     filterStoriesByDate(day);
+  }
+
+  function resetFilter() {
+    setDateRange({ from: null, to: null });
+    setFilterType("");
+    getAllTravelStories();
   }
 
   useEffect(() => {
@@ -162,6 +196,14 @@ export default function Home() {
       />
 
       <div className="container mx-auto py-10">
+        <FilterInfoTitle
+          filterType={filterType}
+          filterDates={dateRange}
+          onClear={() => {
+            resetFilter();
+          }}
+        />
+
         <div className="flex gap-7">
           <div className="flex-1">
             {allStories.length > 0 ? (
@@ -185,8 +227,8 @@ export default function Home() {
               </div>
             ) : (
               <EmptyCard
-                imgSrc={EmptyImg}
-                message={`Start creating your first Travel Story! Click the 'Add' button to jot down your thoughts, ideas, and memories. Let's get started!`}
+                imgSrc={getEmptyCardImg(filterType)}
+                message={getEmptyCardMessage(filterType)}
               />
             )}
           </div>
